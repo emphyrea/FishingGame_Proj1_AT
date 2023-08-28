@@ -16,20 +16,17 @@ public class FishingScript : MonoBehaviour
     public Camera playerCam;
     public GameObject pullGoal;
 
-    Rigidbody rb;
     Rigidbody rbParent;
+
+    private GameObject fish;
 
     // Start is called before the first frame update
     void Start()
     {
         this.GetComponent<MeshRenderer>().enabled = true;
         playerCam = Camera.main;
+        fish = null;
 
-        rb = GetComponent<Rigidbody>();
-        if(transform.parent != null)
-        {
-          rbParent = transform.parent.GetComponent<Rigidbody>();
-        }
     }
 
     // Update is called once per frame
@@ -59,35 +56,44 @@ public class FishingScript : MonoBehaviour
 
         }
 
-        if (transform.parent != null)
+        if (transform.parent != null && isCast)
         {
-            rbParent = transform.parent.GetComponent<Rigidbody>();
+            rbParent = transform.parent.parent.GetComponent<Rigidbody>(); //fish rigidbody
+            GetComponent<Collider>().enabled = false;
 
-            if (Input.GetMouseButtonDown(1))
+            if (Input.GetMouseButton(1))
             {
-               rbParent.isKinematic = true;
+               rbParent.isKinematic = false; //use physics
+                if (Vector3.Distance(transform.parent.position, pullGoal.transform.position) > .5)
+                {
+                    rbParent.transform.LookAt(pullGoal.transform);
+                    rbParent.AddRelativeForce(Vector3.forward * forceToPull, ForceMode.Impulse);
+                }
+                else if(Vector3.Distance(transform.parent.position, pullGoal.transform.position) <= 0.5)
+                {
+                    fish = transform.parent.parent.gameObject;
+                    GameObject hookLoc = transform.parent.gameObject; //put in capsule to safely delete
+
+                    transform.parent.parent = null;
+                    transform.parent = null;
+
+                    Destroy(fish);
+                    Destroy(hookLoc);
+                    isCast = false;
+                    transform.rotation = Quaternion.identity;
+                    GetComponent<Collider>().enabled = true;
+
+                    return;
+                }
             }
             else
             {
-                rbParent.isKinematic = false;
+                rbParent.isKinematic = true;
             }
-            if (rbParent.isKinematic == false)
-            {
-                Vector3 currentPos = pullGoal.transform.position - transform.position;
-                rbParent.velocity = currentPos.normalized * forceToPull;
 
-            }
         }
         #endregion
     }
 
-    bool isMoving()
-    {
-        if(rb.velocity.magnitude > 1f)
-        {
-            return true;
-        }
-        return false;
-    }
 
 }

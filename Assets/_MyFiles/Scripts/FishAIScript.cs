@@ -14,16 +14,29 @@ public class FishAIScript : MonoBehaviour
 
     private Transform newTarget;
     public Transform baitDetector;
+    public Transform hookLoc;
+    private bool Escaping = false;
+
+    Rigidbody rb;
+
+    private Transform water;
+    
 
     // Start is called before the first frame update
     void Start()
     {
+        rb = transform.GetComponent<Rigidbody>();
+
+        water = GameObject.FindWithTag("Water").transform; //if doing multiple, change as below
+
         GameObject[] targetobjs = GameObject.FindGameObjectsWithTag("Waypoint");
         foreach(GameObject obj in targetobjs)
         { 
             target.Add(obj.transform);
+            Physics.IgnoreCollision(transform.GetComponent<Collider>(), obj.GetComponent<Collider>());
         }
 
+        Physics.IgnoreCollision(transform.GetComponent<Collider>(), water.GetComponent<Collider>());
     }
 
     // Update is called once per frame
@@ -34,8 +47,17 @@ public class FishAIScript : MonoBehaviour
             newTarget = target[Random.Range(0, target.Count)];
             isMoving = true;
         }
-        transform.LookAt(newTarget);
-        transform.position = Vector3.MoveTowards(transform.position, newTarget.position, speed * Time.deltaTime);
+        if(!Escaping)
+        {
+            transform.LookAt(newTarget);
+            //rb.AddRelativeForce(Vector3.forward * speed, ForceMode.Impulse);
+            transform.position = Vector3.MoveTowards(transform.position, newTarget.position, speed * Time.deltaTime);
+        }
+        else
+        {
+            //rb.AddRelativeForce(Vector3.back * speed, ForceMode.Impulse);
+            //transform.position = Vector3.MoveTowards(transform.position, newTarget.position, speed * Time.deltaTime);
+        }
 
         if(transform.position == newTarget.position)
         {
@@ -57,12 +79,16 @@ public class FishAIScript : MonoBehaviour
         Debug.Log(other.gameObject.tag);
         if (other.gameObject.tag == "Hook")
         {
-            Debug.Log("hook");
-            other.gameObject.transform.SetParent(transform, true);
-            other.gameObject.transform.position = transform.position;
+            Escaping = true;
+            Debug.Log("hooked");
+
+            other.gameObject.transform.SetParent(hookLoc, true);
+            other.gameObject.transform.position = hookLoc.position;
+
+            GetComponent<Collider>().enabled = false;
             target.Clear();
-            target.Add(escapePos);
-            newTarget = escapePos;
+            //target.Add(escapePos);
+            //newTarget = escapePos;
         }
         else
             return;
