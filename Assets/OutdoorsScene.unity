@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 2157.4978, g: 2259.9407, b: 3279.4692, a: 1}
+  m_IndirectSpecularColor: {r: 2156.5618, g: 2259.3315, b: 3279.249, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2556,7 +2556,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hasPole: 1
   isCast: 0
-  forceToPull: 4
+  forceToPull: 0.5
   hitWorldPos: {x: 0, y: 0, z: 0}
   playerCam: {fileID: 0}
   pullGoal: {fileID: 1250949808}

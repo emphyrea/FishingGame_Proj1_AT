@@ -16,15 +16,22 @@ public class FishAIScript : MonoBehaviour
     public Transform baitDetector;
     public Transform hookLoc;
     private bool Escaping = false;
+    private bool isResisting = false;
 
     Rigidbody rb;
 
     private Transform water;
+    public Material fishMat;
+
+    private float Pullingtimer = 5;
+    private float Resisttimer = 5;
+    private int timer;
     
 
     // Start is called before the first frame update
     void Start()
     {
+        fishMat = transform.GetComponent<Renderer>().material;
         rb = transform.GetComponent<Rigidbody>();
 
         water = GameObject.FindWithTag("Water").transform; //if doing multiple, change as below
@@ -55,6 +62,22 @@ public class FishAIScript : MonoBehaviour
         }
         else
         {
+            //int randNum = Random.Range(1, 5);
+
+            StartCoroutine(ResistTimer(Resisttimer));
+
+            if (Resisttimer > 0)
+            {
+                rb.drag = 20;
+                isResisting = true;
+                StartCoroutine(PullTimer());
+
+            }
+            else
+            {
+                rb.drag = 0;
+                isResisting = false;
+            }
             //rb.AddRelativeForce(Vector3.back * speed, ForceMode.Impulse);
             //transform.position = Vector3.MoveTowards(transform.position, newTarget.position, speed * Time.deltaTime);
         }
@@ -92,5 +115,47 @@ public class FishAIScript : MonoBehaviour
         }
         else
             return;
+    }
+
+
+    IEnumerator PullTimer()
+    {
+        while (isResisting)
+        {
+            if (Input.GetMouseButton(1))
+            {
+                yield return new WaitForSeconds(1);
+                Pullingtimer--;
+                Debug.Log($"pulling time is:{Pullingtimer}");
+                fishMat.color = Color.Lerp(fishMat.color, Color.red, Time.deltaTime / Pullingtimer);
+
+                if (fishMat.color == Color.red)
+                {
+                    Hook.transform.SetParent(null);
+                    Hook.transform.rotation = Quaternion.identity;
+                    Hook.transform.GetComponent<Collider>().enabled = true;
+
+                    isResisting = false;
+                    Destroy(transform.gameObject);
+                }
+            }
+            else
+            {
+                fishMat.color = Color.white;
+                Pullingtimer = 5;
+                yield return new WaitForEndOfFrame();
+            }
+        }
+    }
+
+    IEnumerator ResistTimer(float resistTimer)
+    {
+        while (resistTimer > 0)
+        {
+            yield return new WaitForSeconds(1);
+            resistTimer--;
+            Debug.Log(resistTimer);
+        }
+        yield return resistTimer;
     }
 }
