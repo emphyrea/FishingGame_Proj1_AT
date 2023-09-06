@@ -24,8 +24,8 @@ public class FishAIScript : MonoBehaviour
 
     public Material fishMat;
 
-    private float Pullingtimer = 10;
-    private float Resisttimer = 2;
+    private float Pullingtimer = 5;
+    private float Resisttimer = 4;
     private int randNum;
 
     public FishType fishSO;
@@ -67,21 +67,40 @@ public class FishAIScript : MonoBehaviour
         {
             StartCoroutine(ResistTimer(Resisttimer));
 
-            if (Resisttimer > 0 && Input.GetMouseButton(1))
-            {     
+            
+            // StartCoroutine(PullTimer());
 
-
-                isResisting = true;
-                rb.AddRelativeForce(Vector3.back * 2f, ForceMode.Force);
-                StartCoroutine(PullTimer());
-;
-            }
-            else if (Resisttimer <= 0 && Input.GetMouseButtonUp(1))
+            if (isResisting)
             {
-                rb.AddRelativeForce(Vector3.forward * 0, ForceMode.Force);
-                fishMat.color = Color.white;
-                isResisting = false;
+                if (Input.GetMouseButton(1))
+                {
+                    Pullingtimer -= Time.deltaTime;
+                    Debug.Log($"pulling time is:{Pullingtimer}");
+                    if (Pullingtimer <= 0)
+                    {
+                        Pullingtimer = 0;
+                        PullTimerEnd();
+                    }
+                    fishMat.color = Color.Lerp(fishMat.color, Color.red, Time.deltaTime / Pullingtimer);
+
+                    if (Input.GetMouseButtonUp(1))
+                    {
+                        fishMat.color = Color.white;
+                        Pullingtimer = 5;
+                    }
+
+                    if (fishMat.color == Color.red)
+                    {
+                        Hook.transform.SetParent(null);
+                        Hook.transform.rotation = Quaternion.identity;
+                        Hook.transform.GetComponent<Collider>().enabled = true;
+
+                        isResisting = false;
+                        Destroy(transform.gameObject);
+                    }
+                }
             }
+
         }
 
         if(transform.position == newTarget.position)
@@ -125,8 +144,6 @@ public class FishAIScript : MonoBehaviour
         yield return new WaitForSeconds(1);
         Pullingtimer--;      
         Debug.Log($"pulling time is:{Pullingtimer}");
-        fishMat.color = Color.Lerp(fishMat.color, Color.red, Time.deltaTime / Pullingtimer);
-
         if (Pullingtimer <= 0)
         {
             Pullingtimer = 0;
@@ -147,13 +164,14 @@ public class FishAIScript : MonoBehaviour
 
     void PullTimerEnd()
     {
-        rb.drag = 0;
+        rb.AddRelativeForce(Vector3.forward * 0f, ForceMode.Force);
         fishMat.color = Color.white;
         isResisting = false;
     }
 
-    void ResistTimerEnd()
+    IEnumerator ResistTimerEnd()
     {
+        isResisting = false;
         RandomNum();
         if (randNum == 5)
         {
@@ -161,6 +179,10 @@ public class FishAIScript : MonoBehaviour
         }
         else
         {
+            isResisting = false;
+            PullTimerEnd();
+
+            yield return new WaitForSeconds(1);
             RandomNum();
         }
     }
@@ -173,15 +195,18 @@ public class FishAIScript : MonoBehaviour
 
     IEnumerator ResistTimer(float resistTimer)
     {
+        rb.AddRelativeForce(Vector3.back * 2f, ForceMode.Force);
+
         while (resistTimer > 0)
         {
+            isResisting = true;
             yield return new WaitForSeconds(1);
             resistTimer--;
             Debug.Log($"resist time is: {resistTimer}");
         }
         if(resistTimer <= 0)
         {
-            ResistTimerEnd();
+            StartCoroutine(ResistTimerEnd());
         }
     }
 }
