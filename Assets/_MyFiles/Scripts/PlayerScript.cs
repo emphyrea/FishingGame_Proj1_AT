@@ -62,16 +62,9 @@ public class PlayerScript : MonoBehaviour
 
         charController.Move(moveDir * Time.deltaTime);
 
-
-    }
-
-    void CastLine()
-    {
-
-    }
-
-    void ReelFish()
-    {
-
+        if(Input.GetKeyDown(KeyCode.I))
+        {
+            CollectionScript.Instance.CollectionMenu.gameObject.SetActive(true);
+        }
     }
 }

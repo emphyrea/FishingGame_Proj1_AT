@@ -21,16 +21,19 @@ public class FishAIScript : MonoBehaviour
     Rigidbody rb;
 
     private Transform water;
+
     public Material fishMat;
 
-    private float Pullingtimer = 5;
-    private float Resisttimer = 5;
-    private int timer;
-    
+    private float Pullingtimer = 10;
+    private float Resisttimer = 2;
+    private int randNum;
+
+    public FishType fishSO;
 
     // Start is called before the first frame update
     void Start()
     {
+
         fishMat = transform.GetComponent<Renderer>().material;
         rb = transform.GetComponent<Rigidbody>();
 
@@ -44,6 +47,7 @@ public class FishAIScript : MonoBehaviour
         }
 
         Physics.IgnoreCollision(transform.GetComponent<Collider>(), water.GetComponent<Collider>());
+
     }
 
     // Update is called once per frame
@@ -57,29 +61,27 @@ public class FishAIScript : MonoBehaviour
         if(!Escaping)
         {
             transform.LookAt(newTarget);
-            //rb.AddRelativeForce(Vector3.forward * speed, ForceMode.Impulse);
             transform.position = Vector3.MoveTowards(transform.position, newTarget.position, speed * Time.deltaTime);
         }
         else
         {
-            //int randNum = Random.Range(1, 5);
-
             StartCoroutine(ResistTimer(Resisttimer));
 
-            if (Resisttimer > 0)
-            {
-                rb.drag = 20;
-                isResisting = true;
-                StartCoroutine(PullTimer());
+            if (Resisttimer > 0 && Input.GetMouseButton(1))
+            {     
 
+
+                isResisting = true;
+                rb.AddRelativeForce(Vector3.back * 2f, ForceMode.Force);
+                StartCoroutine(PullTimer());
+;
             }
-            else
+            else if (Resisttimer <= 0 && Input.GetMouseButtonUp(1))
             {
-                rb.drag = 0;
+                rb.AddRelativeForce(Vector3.forward * 0, ForceMode.Force);
+                fishMat.color = Color.white;
                 isResisting = false;
             }
-            //rb.AddRelativeForce(Vector3.back * speed, ForceMode.Impulse);
-            //transform.position = Vector3.MoveTowards(transform.position, newTarget.position, speed * Time.deltaTime);
         }
 
         if(transform.position == newTarget.position)
@@ -120,32 +122,53 @@ public class FishAIScript : MonoBehaviour
 
     IEnumerator PullTimer()
     {
-        while (isResisting)
+        yield return new WaitForSeconds(1);
+        Pullingtimer--;      
+        Debug.Log($"pulling time is:{Pullingtimer}");
+        fishMat.color = Color.Lerp(fishMat.color, Color.red, Time.deltaTime / Pullingtimer);
+
+        if (Pullingtimer <= 0)
         {
-            if (Input.GetMouseButton(1))
-            {
-                yield return new WaitForSeconds(1);
-                Pullingtimer--;
-                Debug.Log($"pulling time is:{Pullingtimer}");
-                fishMat.color = Color.Lerp(fishMat.color, Color.red, Time.deltaTime / Pullingtimer);
-
-                if (fishMat.color == Color.red)
-                {
-                    Hook.transform.SetParent(null);
-                    Hook.transform.rotation = Quaternion.identity;
-                    Hook.transform.GetComponent<Collider>().enabled = true;
-
-                    isResisting = false;
-                    Destroy(transform.gameObject);
-                }
-            }
-            else
-            {
-                fishMat.color = Color.white;
-                Pullingtimer = 5;
-                yield return new WaitForEndOfFrame();
-            }
+            Pullingtimer = 0;
+            PullTimerEnd();
         }
+
+        if (fishMat.color == Color.red)
+        {
+            Hook.transform.SetParent(null);
+            Hook.transform.rotation = Quaternion.identity;
+            Hook.transform.GetComponent<Collider>().enabled = true;
+
+            isResisting = false;
+            Destroy(transform.gameObject);
+        }
+
+    }
+
+    void PullTimerEnd()
+    {
+        rb.drag = 0;
+        fishMat.color = Color.white;
+        isResisting = false;
+    }
+
+    void ResistTimerEnd()
+    {
+        RandomNum();
+        if (randNum == 5)
+        {
+            StartCoroutine(ResistTimer(Resisttimer));
+        }
+        else
+        {
+            RandomNum();
+        }
+    }
+
+    int RandomNum()
+    {
+        randNum = Random.Range(1, 6);
+        return randNum;
     }
 
     IEnumerator ResistTimer(float resistTimer)
@@ -154,8 +177,11 @@ public class FishAIScript : MonoBehaviour
         {
             yield return new WaitForSeconds(1);
             resistTimer--;
-            Debug.Log(resistTimer);
+            Debug.Log($"resist time is: {resistTimer}");
         }
-        yield return resistTimer;
+        if(resistTimer <= 0)
+        {
+            ResistTimerEnd();
+        }
     }
 }

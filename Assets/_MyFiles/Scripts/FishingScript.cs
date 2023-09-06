@@ -64,14 +64,20 @@ public class FishingScript : MonoBehaviour
             if (Input.GetMouseButton(1))
             {
                rbParent.isKinematic = false; //use physics
-                if (Vector3.Distance(transform.parent.position, pullGoal.transform.position) > .5) //if far enough away
+                if (Vector3.Distance(transform.parent.position, pullGoal.transform.position) > 1) //if far enough away
                 {
                     rbParent.transform.LookAt(pullGoal.transform);
                     rbParent.AddRelativeForce(Vector3.forward * forceToPull, ForceMode.Impulse);
                 }
-                else if(Vector3.Distance(transform.parent.position, pullGoal.transform.position) <= 0.5) // if close enough to collect
+                else if(Vector3.Distance(transform.parent.position, pullGoal.transform.position) <= 1) // if close enough to collect
                 {
                     fish = transform.parent.parent.gameObject;
+                    FishType fishtype = fish.GetComponent<FishType>();
+                    if (fishtype.firstCatch == true)
+                    {
+                        fishtype.firstCatch = false;
+                        CollectionScript.Instance.OnCollect(fishtype);
+                    }
                     GameObject hookLoc = transform.parent.gameObject; //put in capsule to safely delete
 
                     transform.parent.parent = null;
