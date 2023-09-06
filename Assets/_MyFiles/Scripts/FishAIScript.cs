@@ -10,7 +10,6 @@ public class FishAIScript : MonoBehaviour
     public Transform escapePos;
     bool isMoving = false;
     public float speed = 5f;
-    float collisionTime;
 
     private Transform newTarget;
     public Transform baitDetector;
