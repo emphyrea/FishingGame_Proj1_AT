@@ -30,6 +30,7 @@ public class FishAIScript : MonoBehaviour
 
     public FishType fishSO;
 
+
     // Start is called before the first frame update
     void Start()
     {
@@ -50,6 +51,7 @@ public class FishAIScript : MonoBehaviour
 
     }
 
+
     // Update is called once per frame
     void Update()
     {
@@ -67,38 +69,34 @@ public class FishAIScript : MonoBehaviour
         {
             StartCoroutine(ResistTimer(Resisttimer));
 
-            
             // StartCoroutine(PullTimer());
 
-            if (isResisting)
+            if (Input.GetMouseButton(1) && isResisting) 
             {
-                if (Input.GetMouseButton(1))
+                Pullingtimer -= Time.deltaTime; // time till line "snaps" when fish is currently resisting
+                Debug.Log($"pulling time is:{Pullingtimer}");
+                if (Pullingtimer <= 0)
                 {
-                    Pullingtimer -= Time.deltaTime;
-                    Debug.Log($"pulling time is:{Pullingtimer}");
-                    if (Pullingtimer <= 0)
-                    {
-                        Pullingtimer = 0;
-                        PullTimerEnd();
-                    }
-                    fishMat.color = Color.Lerp(fishMat.color, Color.red, Time.deltaTime / Pullingtimer);
-
-                    if (Input.GetMouseButtonUp(1))
-                    {
-                        fishMat.color = Color.white;
-                        Pullingtimer = 5;
-                    }
-
-                    if (fishMat.color == Color.red)
-                    {
-                        Hook.transform.SetParent(null);
-                        Hook.transform.rotation = Quaternion.identity;
-                        Hook.transform.GetComponent<Collider>().enabled = true;
-
-                        isResisting = false;
-                        Destroy(transform.gameObject);
-                    }
+                    Pullingtimer = 0;
+                    PullTimerEnd();
                 }
+                fishMat.color = Color.Lerp(fishMat.color, Color.red, Time.deltaTime / Pullingtimer);
+
+                if (fishMat.color == Color.red)
+                {
+                    Hook.transform.SetParent(null);
+                    Hook.transform.rotation = Quaternion.identity;
+                    Hook.transform.GetComponent<Collider>().enabled = true;
+
+                    isResisting = false;
+                    Destroy(transform.gameObject);
+                }
+
+            }
+            if (Input.GetMouseButtonUp(1) && isResisting)
+            {
+                fishMat.color = Color.white;
+                Pullingtimer = 5;
             }
 
         }
@@ -107,8 +105,6 @@ public class FishAIScript : MonoBehaviour
         {
             isMoving = false;
         }
-
-        //OnTriggerEnter(hookobj.GetComponent<BoxCollider>());
     }
     void OnDrawGizmos()
     {
@@ -131,15 +127,13 @@ public class FishAIScript : MonoBehaviour
 
             GetComponent<Collider>().enabled = false;
             target.Clear();
-            //target.Add(escapePos);
-            //newTarget = escapePos;
         }
         else
             return;
     }
 
 
-    IEnumerator PullTimer()
+    IEnumerator PullTimer() // time till line "snaps" when fish is currently resisting
     {
         yield return new WaitForSeconds(1);
         Pullingtimer--;      
@@ -164,7 +158,7 @@ public class FishAIScript : MonoBehaviour
 
     void PullTimerEnd()
     {
-        rb.AddRelativeForce(Vector3.forward * 0f, ForceMode.Force);
+        rb.AddRelativeForce(Vector3.forward * 2f, ForceMode.Force);
         fishMat.color = Color.white;
         isResisting = false;
     }
@@ -176,6 +170,7 @@ public class FishAIScript : MonoBehaviour
         if (randNum == 5)
         {
             StartCoroutine(ResistTimer(Resisttimer));
+            yield return null;
         }
         else
         {
@@ -195,18 +190,18 @@ public class FishAIScript : MonoBehaviour
 
     IEnumerator ResistTimer(float resistTimer)
     {
-        rb.AddRelativeForce(Vector3.back * 2f, ForceMode.Force);
-
         while (resistTimer > 0)
         {
             isResisting = true;
             yield return new WaitForSeconds(1);
             resistTimer--;
+            rb.AddRelativeForce(Vector3.back * 4f, ForceMode.Force);
             Debug.Log($"resist time is: {resistTimer}");
         }
         if(resistTimer <= 0)
         {
             StartCoroutine(ResistTimerEnd());
+            yield return null;
         }
     }
 }

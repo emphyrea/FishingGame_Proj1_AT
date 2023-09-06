@@ -14,6 +14,13 @@ public class CollectionScript : MonoBehaviour
     public List<Image> fishImages;
     public FishType[] childTypes;
     public List<GameObject> collectionObjs;
+
+
+    private void OnEnable()
+    {
+        FishingScript.onCollectSender += OnCollectReceive;
+    }
+
     private void Awake()
     {
         // If there is an instance, and it's not me, delete myself.
@@ -37,20 +44,21 @@ public class CollectionScript : MonoBehaviour
             Debug.Log(collectionObjs[i].name);
             fishImages.Add(collectionObjs[i].transform.GetComponent<Image>());
             Debug.Log(fishImages[i].name);
+            CollectionMenu.enabled = false;
+            fishImages[i].enabled = false;
         }
-
-        CollectionMenu.gameObject.SetActive(false);
+;
 
     }
 
     // Update is called once per frame
-    public void OnCollect(FishType caughtType)
+    public void OnCollectReceive(FishType caughtType)
     {
         foreach (FishType type in childTypes)
         {
             if (caughtType.fishName == type.fishName)
             {
-                if (caughtType.firstCatch == false)
+                if (type.firstCatch == true)
                 {
                     type.firstCatch = false;
                     GetComponent<Image>().sprite = type.collectionImage;

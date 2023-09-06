@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 2156.5618, g: 2259.3315, b: 3279.249, a: 1}
+  m_IndirectSpecularColor: {r: 2157.4978, g: 2259.9414, b: 3279.4644, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -2116,7 +2116,7 @@ MonoBehaviour:
   baitDetector: {fileID: 490159042}
   hookLoc: {fileID: 136351119}
   fishMat: {fileID: 0}
-  fishSO: {fileID: 11400000, guid: 084171cb9629d754abeeb6a12eb6aaba, type: 2}
+  fishSO: {fileID: 1191139785}
 --- !u!135 &1191139783
 SphereCollider:
   m_ObjectHideFlags: 0

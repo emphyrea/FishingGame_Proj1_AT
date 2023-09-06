@@ -19,6 +19,8 @@ public class FishingScript : MonoBehaviour
     Rigidbody rbParent;
 
     private GameObject fish;
+    public delegate void OnCollect(FishType caughtType);
+    public static event OnCollect onCollectSender;
 
     // Start is called before the first frame update
     void Start()
@@ -75,8 +77,11 @@ public class FishingScript : MonoBehaviour
                     FishType fishtype = fish.GetComponent<FishType>();
                     if (fishtype.firstCatch == true)
                     {
-                        fishtype.firstCatch = false;
-                        CollectionScript.Instance.OnCollect(fishtype);
+                        if (onCollectSender != null)
+                        {
+                            Debug.Log("Sending Info..");
+                            onCollectSender(fishtype);
+                        }
                     }
                     GameObject hookLoc = transform.parent.gameObject; //put in capsule to safely delete
 

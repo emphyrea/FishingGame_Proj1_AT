@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerScript : MonoBehaviour
 {
@@ -62,9 +63,21 @@ public class PlayerScript : MonoBehaviour
 
         charController.Move(moveDir * Time.deltaTime);
 
-        if(Input.GetKeyDown(KeyCode.I))
+        if(Input.GetKeyDown(KeyCode.I) && CollectionScript.Instance.CollectionMenu.enabled == false)
         {
-            CollectionScript.Instance.CollectionMenu.gameObject.SetActive(true);
+            for (int i = 0; i < CollectionScript.Instance.CollectionMenu.transform.childCount; i++)
+            {
+                CollectionScript.Instance.fishImages[i].enabled = true;
+            }
+            CollectionScript.Instance.CollectionMenu.enabled = true;
+        }
+        else if (Input.GetKeyDown(KeyCode.I) && CollectionScript.Instance.CollectionMenu.enabled == true)
+        {
+            for (int i = 0; i < CollectionScript.Instance.CollectionMenu.transform.childCount; i++)
+            {
+                CollectionScript.Instance.fishImages[i].enabled = false;
+            }
+            CollectionScript.Instance.CollectionMenu.enabled = false;
         }
     }
 }
