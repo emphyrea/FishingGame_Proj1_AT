@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -41,9 +42,8 @@ public class CollectionScript : MonoBehaviour
         for (int i = 0; i < CollectionMenu.transform.childCount; i++)
         {
             collectionObjs.Add(CollectionMenu.transform.GetChild(i).gameObject);
-            Debug.Log(collectionObjs[i].name);
             fishImages.Add(collectionObjs[i].transform.GetComponent<Image>());
-            Debug.Log(fishImages[i].name);
+
             CollectionMenu.enabled = false;
             fishImages[i].enabled = false;
         }
@@ -56,18 +56,19 @@ public class CollectionScript : MonoBehaviour
     {
         foreach (FishType type in childTypes)
         {
-            if (caughtType.fishName == type.fishName)
-            {
-                if (type.firstCatch == true)
+
+                if (type == caughtType)
                 {
-                    type.firstCatch = false;
-                    GetComponent<Image>().sprite = type.collectionImage;
+                    if (type.firstCatch == true)
+                    {
+                        type.firstCatch = false;
+                        GetComponent<Image>().sprite = type.collectionImage;
+                    }
+                    else
+                    {
+                        return;
+                    }
                 }
-                else
-                {
-                    return;
-                }
-            }
 
         }
     }

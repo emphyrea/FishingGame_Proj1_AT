@@ -4,20 +4,26 @@ using UnityEngine;
 
 public class FishAIScript : MonoBehaviour
 {
+    enum State
+    {
+        Moving,
+        Escaping,
+        Resisting
+    }
+
     public List<Transform> target;
     public Transform Hook;
     public GameObject hookobj;
-    public Transform escapePos;
-    bool isMoving = false;
     public float speed = 5f;
 
     private Transform newTarget;
     public Transform baitDetector;
     public Transform hookLoc;
-    private bool Escaping = false;
-    private bool isResisting = false;
+    State state;
 
     Rigidbody rb;
+
+    bool isMoving;
 
     private Transform water;
 
@@ -25,10 +31,10 @@ public class FishAIScript : MonoBehaviour
 
     private float Pullingtimer = 5;
     private float Resisttimer = 4;
-    private int randNum;
 
     public FishType fishSO;
 
+    Coroutine resistingCoroutine;
 
     // Start is called before the first frame update
     void Start()
@@ -46,65 +52,49 @@ public class FishAIScript : MonoBehaviour
             Physics.IgnoreCollision(transform.GetComponent<Collider>(), obj.GetComponent<Collider>());
         }
 
+        rb.isKinematic = true;
+
         Physics.IgnoreCollision(transform.GetComponent<Collider>(), water.GetComponent<Collider>());
 
+        state = State.Moving;
     }
 
 
     // Update is called once per frame
     void Update()
     {
-        if(!isMoving)
+        if (state == State.Moving)
+        {
+            Move();
+        }
+        else if (state == State.Escaping)
+        {
+            newTarget = null;
+        }
+
+    }
+
+    private void Resist()
+    {
+        StartCoroutine(ResistTimer(Resisttimer));
+    }
+
+    private void Move()
+    {   if(!isMoving || newTarget == null)
         {
             newTarget = target[Random.Range(0, target.Count)];
-            isMoving = true;
         }
-        if(!Escaping)
-        {
-            transform.LookAt(newTarget);
-            transform.position = Vector3.MoveTowards(transform.position, newTarget.position, speed * Time.deltaTime);
-        }
-        else
-        {
-            StartCoroutine(ResistTimer(Resisttimer));
 
-            // StartCoroutine(PullTimer());
-
-            if (Input.GetMouseButton(1) && isResisting) 
-            {
-                Pullingtimer -= Time.deltaTime; // time till line "snaps" when fish is currently resisting
-                Debug.Log($"pulling time is:{Pullingtimer}");
-                if (Pullingtimer <= 0)
-                {
-                    Pullingtimer = 0;
-                    PullTimerEnd();
-                }
-                fishMat.color = Color.Lerp(fishMat.color, Color.red, Time.deltaTime / Pullingtimer);
-
-                if (fishMat.color == Color.red)
-                {
-                    Hook.transform.SetParent(null);
-                    Hook.transform.rotation = Quaternion.identity;
-                    Hook.transform.GetComponent<Collider>().enabled = true;
-
-                    isResisting = false;
-                    Destroy(transform.gameObject);
-                }
-
-            }
-            if (Input.GetMouseButtonUp(1) && isResisting)
-            {
-                fishMat.color = Color.white;
-                Pullingtimer = 5;
-            }
-
-        }
+        transform.LookAt(newTarget);
+        isMoving = true;
+        transform.position = Vector3.MoveTowards(transform.position, newTarget.position, speed * Time.deltaTime);
 
         if(transform.position == newTarget.position)
         {
             isMoving = false;
         }
     }
+
     void OnDrawGizmos()
     {
         // Draw a yellow sphere at the transform's position
@@ -118,17 +108,13 @@ public class FishAIScript : MonoBehaviour
         Debug.Log(other.gameObject.tag);
         if (other.gameObject.tag == "Hook")
         {
-            Escaping = true;
-            Debug.Log("hooked");
-
             other.gameObject.transform.SetParent(hookLoc, true);
             other.gameObject.transform.position = hookLoc.position;
 
             GetComponent<Collider>().enabled = false;
             target.Clear();
+            Hooked();
         }
-        else
-            return;
     }
 
 
@@ -140,7 +126,7 @@ public class FishAIScript : MonoBehaviour
         if (Pullingtimer <= 0)
         {
             Pullingtimer = 0;
-            PullTimerEnd();
+            ResistEnded();
         }
 
         if (fishMat.color == Color.red)
@@ -149,58 +135,65 @@ public class FishAIScript : MonoBehaviour
             Hook.transform.rotation = Quaternion.identity;
             Hook.transform.GetComponent<Collider>().enabled = true;
 
-            isResisting = false;
             Destroy(transform.gameObject);
         }
 
     }
 
-    void PullTimerEnd()
+    void ResistEnded()
     {
-        rb.AddRelativeForce(Vector3.forward * 2f, ForceMode.Force);
+        //rb.AddRelativeForce(Vector3.forward * 2f, ForceMode.Force);
         fishMat.color = Color.white;
-        isResisting = false;
+        state = State.Escaping;
     }
 
-    IEnumerator ResistTimerEnd()
+    void ResistTimerEnd()
     {
-        isResisting = false;
-        RandomNum();
+        int randNum = RandomNum();
         if (randNum == 5)
         {
             StartCoroutine(ResistTimer(Resisttimer));
-            yield return null;
+            
         }
         else
         {
-            isResisting = false;
-            PullTimerEnd();
-
-            yield return new WaitForSeconds(1);
-            RandomNum();
+            ResistEnded();
         }
     }
 
     int RandomNum()
     {
-        randNum = Random.Range(1, 6);
-        return randNum;
+        return Random.Range(1, 6);
+        
     }
 
     IEnumerator ResistTimer(float resistTimer)
     {
+        state = State.Resisting;
+        fishMat.color = Color.red;
         while (resistTimer > 0)
         {
-            isResisting = true;
             yield return new WaitForSeconds(1);
             resistTimer--;
-            rb.AddRelativeForce(Vector3.back * 4f, ForceMode.Force);
+            //rb.AddRelativeForce(Vector3.back * 4f, ForceMode.Force);
             Debug.Log($"resist time is: {resistTimer}");
         }
+
         if(resistTimer <= 0)
         {
-            StartCoroutine(ResistTimerEnd());
+            ResistTimerEnd();
+            resistingCoroutine = null;
             yield return null;
         }
+    }
+
+    internal void Hooked()
+    {
+        Resist();
+    }
+
+    internal bool IsResisting()
+    {
+        return state == State.Resisting;
     }
 }

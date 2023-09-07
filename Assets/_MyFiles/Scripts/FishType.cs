@@ -4,10 +4,23 @@ using UnityEngine;
 
 public class FishType : MonoBehaviour
 {
-    public string fishName;
+    public enum fishName
+    {
+        Salmon,
+        Goldfish,
+        Bass,
+        Catfish,
+        Pirahna,
+        Prawn
+    };
 
     public bool firstCatch = true;
     public Sprite collectionImage;
     public Sprite initialImage;
+
+    private void Start()
+    {
+        firstCatch = true;
+    }
 
 }

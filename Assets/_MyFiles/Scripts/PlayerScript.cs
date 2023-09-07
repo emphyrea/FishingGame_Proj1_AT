@@ -22,10 +22,6 @@ public class PlayerScript : MonoBehaviour
 
     CharacterController charController;
 
-
-
-
-
     // Start is called before the first frame update
     void Start()
     {
