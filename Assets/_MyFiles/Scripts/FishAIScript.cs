@@ -29,7 +29,7 @@ public class FishAIScript : MonoBehaviour
 
     public Material fishMat;
 
-    private float Snaptime = 5; //timers
+    private float Snaptime = 4; //timers
     private float Resisttimer = 4;
 
     public FishType fishSO;
@@ -79,7 +79,6 @@ public class FishAIScript : MonoBehaviour
             rb.transform.LookAt(pullGoal.transform);
         }
 
-        fishMat.color = Color.Lerp(Color.white, Color.red, Time.deltaTime / Snaptime);
     }
 
     private void Resist()
@@ -128,7 +127,7 @@ public class FishAIScript : MonoBehaviour
 
     internal void StartSnapTimer()
     {
-        if (isRunningSnapTimer) { return; }
+        //if (isRunningSnapTimer) { return; }
         StartCoroutine(SnapTimer());
     }
 
@@ -138,13 +137,14 @@ public class FishAIScript : MonoBehaviour
         yield return new WaitForSeconds(1);
         Snaptime--;      
         Debug.Log($"pulling time is:{Snaptime}");
-        
+        fishMat.color = Color.Lerp(Color.white, Color.red, 1/Snaptime);
+
 
         if (Snaptime <= 0)
         {
             Snaptime = 0;
-            ResistEnded();
             isRunningSnapTimer = false;
+            ResistEnded();
         }
 
         if (fishMat.color == Color.red)
@@ -168,10 +168,9 @@ public class FishAIScript : MonoBehaviour
     void ResistTimerEnd()
     {
         int randNum = RandomNum();
-        if (randNum == 5)
+        if (randNum >= 4)
         {
-            StartCoroutine(ResistTimer(Resisttimer));
-            
+            StartCoroutine(ResistTimer(Resisttimer));          
         }
         else
         {
@@ -188,12 +187,11 @@ public class FishAIScript : MonoBehaviour
     IEnumerator ResistTimer(float resistTimer)
     {
         state = State.Resisting;
-        //fishMat.color = Color.red;
         while (resistTimer > 0)
         {
             yield return new WaitForSeconds(1);
             resistTimer--;
-            //rb.AddRelativeForce(Vector3.back * 4f, ForceMode.Force);
+            //rb.AddRelativeForce(Vector3.back * 4f, ForceMode.VelocityChange);
             Debug.Log($"resist time is: {resistTimer}");
         }
 

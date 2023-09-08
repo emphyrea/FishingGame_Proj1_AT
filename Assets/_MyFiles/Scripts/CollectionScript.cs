@@ -57,7 +57,10 @@ public class CollectionScript : MonoBehaviour
     {
         foreach (FishType type in childTypes)
         {
-                if (type.fishName == caughtType.fishName)
+            Debug.Log(type.fishName);
+            Debug.Log(caughtType.fishName);
+
+            if (type.fishName == caughtType.fishName)
                 {
                     if (type.firstCatch == true)
                     {

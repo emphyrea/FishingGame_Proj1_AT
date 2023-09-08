@@ -119,11 +119,11 @@ public class FishingScript : MonoBehaviour
             }
             GameObject hookLoc = transform.parent.gameObject; //put in capsule to safely delete
 
-            transform.parent = null;
             transform.parent.parent = null;
+            transform.parent = null;
 
-            Destroy(hookLoc);
             Destroy(fish);
+            Destroy(hookLoc);
             isCast = false;
             transform.rotation = Quaternion.identity;
             GetComponent<Collider>().enabled = true;
