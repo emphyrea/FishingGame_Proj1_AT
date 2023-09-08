@@ -106,9 +106,9 @@ public class FishingScript : MonoBehaviour
         }
         else if (Vector3.Distance(transform.parent.position, pullGoal.transform.position) <= 1) // if close enough to collect
         {
-
             FishType fishtype = fish.GetComponent<FishType>();
             Debug.Log($"is {fishtype.firstCatch}");
+            Debug.Log($"is {fishtype.fishName}");
             if (fishtype.firstCatch == true)
             {
                 if (onCollectSender != null)
@@ -119,11 +119,11 @@ public class FishingScript : MonoBehaviour
             }
             GameObject hookLoc = transform.parent.gameObject; //put in capsule to safely delete
 
-            transform.parent.parent = null;
             transform.parent = null;
+            transform.parent.parent = null;
 
-            Destroy(fish);
             Destroy(hookLoc);
+            Destroy(fish);
             isCast = false;
             transform.rotation = Quaternion.identity;
             GetComponent<Collider>().enabled = true;

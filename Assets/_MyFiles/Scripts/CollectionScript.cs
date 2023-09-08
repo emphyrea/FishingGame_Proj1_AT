@@ -13,7 +13,7 @@ public class CollectionScript : MonoBehaviour
 
 
     public List<Image> fishImages;
-    public FishType[] childTypes;
+    public List<FishType> childTypes;
     public List<GameObject> collectionObjs;
 
 
@@ -42,6 +42,7 @@ public class CollectionScript : MonoBehaviour
         for (int i = 0; i < CollectionMenu.transform.childCount; i++)
         {
             collectionObjs.Add(CollectionMenu.transform.GetChild(i).gameObject);
+            childTypes.Add(collectionObjs[i].transform.GetComponent<FishType>());
             fishImages.Add(collectionObjs[i].transform.GetComponent<Image>());
 
             CollectionMenu.enabled = false;
@@ -61,7 +62,7 @@ public class CollectionScript : MonoBehaviour
                     if (type.firstCatch == true)
                     {
                         type.firstCatch = false;
-                        GetComponent<Image>().sprite = type.collectionImage;
+                        type.GetComponentInParent<Image>().sprite = type.collectionImage;
                     }
                     else
                     {
