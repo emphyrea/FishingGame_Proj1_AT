@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class FishType : MonoBehaviour
 {
-    public enum fishName
+    public enum FishName
     {
         Salmon,
         Goldfish,
@@ -13,7 +13,7 @@ public class FishType : MonoBehaviour
         Pirahna,
         Prawn
     };
-
+    public FishName fishName;
     public bool firstCatch = true;
     public Sprite collectionImage;
     public Sprite initialImage;

@@ -37,58 +37,71 @@ public class FishingScript : MonoBehaviour
     }
 
     // Update is called once per frame
-    void FixedUpdate()
+    void Update()
     {
         #region Fishing
-        //castAction.performed do cast;
+        castAction.performed += ctx => { Cast(ctx); };
 
-        //nesting
         if (transform.parent != null && isCast)
         {
             rbParent = transform.parent.parent.GetComponent<Rigidbody>(); //fish rigidbody
             GetComponent<Collider>().enabled = false;
-            if(pullAction.triggered)
-            {
-                Pull();
-            }
-            else
-            {
-                rbParent.isKinematic = true;
-            }
+            pullAction.performed += ctx => { Pull(ctx); };
 
+            pullAction.canceled += ctx => 
+            {
+                if (transform.parent != null && rbParent != null) { rbParent.isKinematic = true; }
+                return;
+            }; //otherwise keeps sliding around
         }
         #endregion
     }
 
-    private void Cast()
+    public void OnEnable()
+    {
+        pullAction.Enable();
+        castAction.Enable();
+    }
+
+    private void Cast(InputAction.CallbackContext context)
     {
         Ray ray = playerCam.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         if (transform.parent == null)
         {
-
             if (Physics.Raycast(ray, out hit))
             {
                 Debug.Log("Hit");
                 transform.position = hit.point;
                 isCast = true;
+                return;
             }
         }
-        isCast = false;
+
     }
 
-    private void Pull()
+    private void Pull(InputAction.CallbackContext context)
     {
-        if (fish == null) return;
-        fish = transform.parent.parent.gameObject;
+        if (transform.parent == null)
+        { return; }
 
-        rbParent.isKinematic = false; //use physics
+        if(fish == null)
+        {
+            fish = transform.parent.parent.gameObject;
+        }
+
         if (Vector3.Distance(transform.parent.position, pullGoal.transform.position) > 1) //if far enough away
         {
-            rbParent.transform.LookAt(pullGoal.transform);
-            if (fish.GetComponent<FishAIScript>().IsResisting())
+            if (fish.GetComponent<FishAIScript>().IsResisting() == false)
             {
-                rbParent.AddRelativeForce(Vector3.forward * forceToPull, ForceMode.Impulse);
+                rbParent.isKinematic = false; //use physics
+                Vector3 direction = (transform.parent.position - pullGoal.transform.position).normalized; ; //from pull from hookLoc to goal
+                direction.y = 0;
+                rbParent.AddRelativeForce(direction * forceToPull, ForceMode.Impulse);
+            }
+            else
+            {
+                fish.GetComponent<FishAIScript>().StartSnapTimer();
             }
         }
         else if (Vector3.Distance(transform.parent.position, pullGoal.transform.position) <= 1) // if close enough to collect

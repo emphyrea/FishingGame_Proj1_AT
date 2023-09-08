@@ -7,34 +7,35 @@ public class FishAIScript : MonoBehaviour
     enum State
     {
         Moving,
-        Escaping,
+        Hooked,
         Resisting
     }
 
-    public List<Transform> target;
-    public Transform Hook;
-    public GameObject hookobj;
-    public float speed = 5f;
-
-    private Transform newTarget;
-    public Transform baitDetector;
-    public Transform hookLoc;
     State state;
 
-    Rigidbody rb;
-
+    public List<Transform> target; //targets when standard movement
+    private Transform newTarget;
     bool isMoving;
+    public float speed = 5f;
 
+    public Transform Hook;
+    public GameObject hookobj; //hook stuff
+    public Transform hookLoc;
+    public Transform baitDetector;
+    GameObject pullGoal = null;
+
+    Rigidbody rb;
     private Transform water;
 
     public Material fishMat;
 
-    private float Pullingtimer = 5;
+    private float Snaptime = 5; //timers
     private float Resisttimer = 4;
 
     public FishType fishSO;
 
     Coroutine resistingCoroutine;
+    bool isRunningSnapTimer = false;
 
     // Start is called before the first frame update
     void Start()
@@ -67,15 +68,23 @@ public class FishAIScript : MonoBehaviour
         {
             Move();
         }
-        else if (state == State.Escaping)
+        else if (state == State.Hooked || state == State.Resisting)
         {
             newTarget = null;
+           
+            if (pullGoal == null)
+            {
+               pullGoal = hookLoc.GetComponentInChildren<FishingScript>().pullGoal;
+            }
+            rb.transform.LookAt(pullGoal.transform);
         }
 
+        fishMat.color = Color.Lerp(Color.white, Color.red, Time.deltaTime / Snaptime);
     }
 
     private void Resist()
     {
+        rb.isKinematic = true;
         StartCoroutine(ResistTimer(Resisttimer));
     }
 
@@ -117,16 +126,25 @@ public class FishAIScript : MonoBehaviour
         }
     }
 
-
-    IEnumerator PullTimer() // time till line "snaps" when fish is currently resisting
+    internal void StartSnapTimer()
     {
+        if (isRunningSnapTimer) { return; }
+        StartCoroutine(SnapTimer());
+    }
+
+    IEnumerator SnapTimer() // time till line "snaps" when fish is currently resisting
+    {
+        isRunningSnapTimer = true;
         yield return new WaitForSeconds(1);
-        Pullingtimer--;      
-        Debug.Log($"pulling time is:{Pullingtimer}");
-        if (Pullingtimer <= 0)
+        Snaptime--;      
+        Debug.Log($"pulling time is:{Snaptime}");
+        
+
+        if (Snaptime <= 0)
         {
-            Pullingtimer = 0;
+            Snaptime = 0;
             ResistEnded();
+            isRunningSnapTimer = false;
         }
 
         if (fishMat.color == Color.red)
@@ -136,15 +154,15 @@ public class FishAIScript : MonoBehaviour
             Hook.transform.GetComponent<Collider>().enabled = true;
 
             Destroy(transform.gameObject);
+            isRunningSnapTimer = false;
         }
 
-    }
+    } 
 
     void ResistEnded()
     {
-        //rb.AddRelativeForce(Vector3.forward * 2f, ForceMode.Force);
         fishMat.color = Color.white;
-        state = State.Escaping;
+        state = State.Hooked;
     }
 
     void ResistTimerEnd()
@@ -170,7 +188,7 @@ public class FishAIScript : MonoBehaviour
     IEnumerator ResistTimer(float resistTimer)
     {
         state = State.Resisting;
-        fishMat.color = Color.red;
+        //fishMat.color = Color.red;
         while (resistTimer > 0)
         {
             yield return new WaitForSeconds(1);
