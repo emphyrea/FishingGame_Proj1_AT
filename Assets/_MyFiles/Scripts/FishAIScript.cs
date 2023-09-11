@@ -40,7 +40,6 @@ public class FishAIScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
         fishMat = transform.GetComponent<Renderer>().material;
         rb = transform.GetComponent<Rigidbody>();
 
@@ -80,13 +79,6 @@ public class FishAIScript : MonoBehaviour
         }
 
     }
-
-    private void Resist()
-    {
-        rb.isKinematic = true;
-        StartCoroutine(ResistTimer(Resisttimer));
-    }
-
     private void Move()
     {   if(!isMoving || newTarget == null)
         {
@@ -102,13 +94,14 @@ public class FishAIScript : MonoBehaviour
             isMoving = false;
         }
     }
-
     void OnDrawGizmos()
     {
         // Draw a yellow sphere at the transform's position
         Gizmos.color = Color.yellow;
         Gizmos.DrawSphere(baitDetector.transform.position, 1);
     }
+
+    #region Resist and Hook
 
     private void OnCollisionEnter(Collision other)
     {
@@ -125,9 +118,67 @@ public class FishAIScript : MonoBehaviour
         }
     }
 
+    internal void Hooked()
+    {
+        Resist();
+    }
+
+    private void Resist()
+    {
+        rb.isKinematic = true;
+        StartCoroutine(ResistTimer(Resisttimer));
+    }
+
+    IEnumerator ResistTimer(float resistTimer)
+    {
+        state = State.Resisting;
+        while (resistTimer > 0)
+        {
+            yield return new WaitForSeconds(1);
+            resistTimer--;
+        }
+
+        if (resistTimer <= 0)
+        {
+            ResistTimerEnd();
+            resistingCoroutine = null;
+            yield return null;
+        }
+    }
+
+    void ResistTimerEnd()
+    {
+        int randNum = RandomNum();
+        if (randNum >= 4)
+        {
+            StartCoroutine(ResistTimer(Resisttimer));
+        }
+        else
+        {
+            ResistEnded();
+        }
+    }
+    int RandomNum()
+    {
+        return Random.Range(1, 6);
+
+    }
+
+    void ResistEnded()
+    {
+        fishMat.color = Color.white;
+        state = State.Hooked;
+    }
+
+    internal bool IsResisting()
+    {
+        return state == State.Resisting;
+    }
+
+    #endregion Resist and Hook
+
     internal void StartSnapTimer()
     {
-        //if (isRunningSnapTimer) { return; }
         StartCoroutine(SnapTimer());
     }
 
@@ -136,7 +187,6 @@ public class FishAIScript : MonoBehaviour
         isRunningSnapTimer = true;
         yield return new WaitForSeconds(1);
         Snaptime--;      
-        Debug.Log($"pulling time is:{Snaptime}");
         fishMat.color = Color.Lerp(Color.white, Color.red, 1/Snaptime);
 
 
@@ -159,57 +209,5 @@ public class FishAIScript : MonoBehaviour
 
     } 
 
-    void ResistEnded()
-    {
-        fishMat.color = Color.white;
-        state = State.Hooked;
-    }
 
-    void ResistTimerEnd()
-    {
-        int randNum = RandomNum();
-        if (randNum >= 4)
-        {
-            StartCoroutine(ResistTimer(Resisttimer));          
-        }
-        else
-        {
-            ResistEnded();
-        }
-    }
-
-    int RandomNum()
-    {
-        return Random.Range(1, 6);
-        
-    }
-
-    IEnumerator ResistTimer(float resistTimer)
-    {
-        state = State.Resisting;
-        while (resistTimer > 0)
-        {
-            yield return new WaitForSeconds(1);
-            resistTimer--;
-            //rb.AddRelativeForce(Vector3.back * 4f, ForceMode.VelocityChange);
-            Debug.Log($"resist time is: {resistTimer}");
-        }
-
-        if(resistTimer <= 0)
-        {
-            ResistTimerEnd();
-            resistingCoroutine = null;
-            yield return null;
-        }
-    }
-
-    internal void Hooked()
-    {
-        Resist();
-    }
-
-    internal bool IsResisting()
-    {
-        return state == State.Resisting;
-    }
 }

@@ -6,16 +6,13 @@ using UnityEngine.UI;
 
 public class CollectionScript : MonoBehaviour
 {
-
     public static CollectionScript Instance { get; private set; }
 
     public Image CollectionMenu;
 
-
     public List<Image> fishImages;
     public List<FishType> childTypes;
     public List<GameObject> collectionObjs;
-
 
     private void OnEnable()
     {
@@ -57,8 +54,6 @@ public class CollectionScript : MonoBehaviour
     {
         foreach (FishType type in childTypes)
         {
-            Debug.Log(type.fishName);
-            Debug.Log(caughtType.fishName);
 
             if (type.fishName == caughtType.fishName)
                 {

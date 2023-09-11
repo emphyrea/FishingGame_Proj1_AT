@@ -9,7 +9,7 @@ public class FishingScript : MonoBehaviour
 
     [Header("Fishing Settings")]
 
-    public bool hasPole = true;
+    public bool hasPole = true; //use for when equip a pole
     public bool isCast = false;
 
     public float forceToPull;
@@ -65,19 +65,22 @@ public class FishingScript : MonoBehaviour
 
     private void Cast(InputAction.CallbackContext context)
     {
-        Ray ray = playerCam.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-        if (transform.parent == null)
+        if(hasPole) //only when has a fishing pole can you cast
         {
-            if (Physics.Raycast(ray, out hit))
+            Ray ray = playerCam.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+            if (transform.parent == null)
             {
-                Debug.Log("Hit");
-                transform.position = hit.point;
-                isCast = true;
-                return;
+                if (Physics.Raycast(ray, out hit))
+                {
+                    Debug.Log("Hit");
+                    transform.position = hit.point;
+                    isCast = true;
+                    return;
+                }
             }
-        }
 
+        }
     }
 
     private void Pull(InputAction.CallbackContext context)
